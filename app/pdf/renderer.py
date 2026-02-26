@@ -17,7 +17,7 @@ def render_page_image(document: fitz.Document, page_index: int, zoom: float = 1.
     try:
         page = document.load_page(page_index)
         matrix = fitz.Matrix(zoom, zoom)
-        pix = page.get_pixmap(matrix=matrix, alpha=False)
+        pix = page.get_pixmap(matrix=matrix, alpha=False, annots=False)
     except Exception as exc:  # pragma: no cover - defensive for PyMuPDF errors
         raise PdfRenderError(f"Failed to render page {page_index + 1}") from exc
 
