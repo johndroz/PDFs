@@ -233,7 +233,7 @@ class PdfCanvas(QWidget):
             y=y_pt,
             width=default_w,
             height=default_h,
-            checked=self._placement_type is FieldType.CHECKBOX,
+            checked=False,
         )
         self._fields.append(field)
         self._selected_index = len(self._fields) - 1

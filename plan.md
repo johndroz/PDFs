@@ -18,7 +18,7 @@ Build a Python desktop application that opens existing PDFs and lets users add e
 - Field properties:
   - Name (required, unique)
   - Required flag
-  - Default value (text) / checked state (checkbox)
+  - Default value (text) / checked state (checkbox, default unchecked)
 - Save output as a new PDF with real editable AcroForm fields.
 
 ## Recommended Tech Stack
@@ -90,6 +90,7 @@ Build a Python desktop application that opens existing PDFs and lets users add e
   - Multi-page placement correctness
 - Manual QA:
   - Open in Adobe Acrobat Reader and confirm fields are editable
+  - Confirm newly added checkboxes open unchecked by default in common viewers
   - Verify checkbox behavior and required flags
 
 ## Risks and Mitigations
