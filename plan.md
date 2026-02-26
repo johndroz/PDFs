@@ -59,11 +59,14 @@ Build a Python desktop application that opens existing PDFs and lets users add e
 - Save routine iterates through all pages and applies overlays where fields exist.
 
 ## Output Generation Strategy
+- On open, create an internal temp working copy of the selected PDF.
+- All editing operations and field imports use the temp working copy.
 - For each page with fields:
   - Create ReportLab overlay with AcroForm fields at target coordinates.
   - Merge overlay onto the corresponding source page via `pypdf`.
 - Preserve untouched pages exactly as-is.
-- Write a new output file path to avoid overwriting source by default.
+- `Save As` writes updated state to the temp working copy first, then copies that file to the chosen destination.
+- Never overwrite the original source file during editing.
 
 ## Validation Rules
 - Field names must be unique across entire document.
@@ -91,6 +94,8 @@ Build a Python desktop application that opens existing PDFs and lets users add e
 - Manual QA:
   - Open in Adobe Acrobat Reader and confirm fields are editable
   - Confirm newly added checkboxes open unchecked by default in common viewers
+  - Confirm original source PDF remains unchanged after edits until `Save As`
+  - Confirm `Save As` succeeds on Windows when editing a currently open document
   - Verify checkbox behavior and required flags
 
 ## Risks and Mitigations
@@ -102,4 +107,4 @@ Build a Python desktop application that opens existing PDFs and lets users add e
   - Normalize page box and account for rotation during transform.
 
 ## Immediate Next Step
-Create the initial project skeleton and implement Milestone 1-2 (open PDF, render pages, and navigate multi-page documents).
+Implement the side property panel (name/default/required/checked, manual X/Y/W/H), then run end-to-end export/reopen tests on multi-page PDFs.

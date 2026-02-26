@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
+import shutil
+import tempfile
 
 import fitz
 
@@ -14,13 +17,17 @@ class PdfLoadError(RuntimeError):
 
 
 def load_pdf(path: str | Path) -> PdfDocument:
-    pdf_path = Path(path)
-    if not pdf_path.exists():
-        raise PdfLoadError(f"File not found: {pdf_path}")
+    source_path = Path(path)
+    if not source_path.exists():
+        raise PdfLoadError(f"File not found: {source_path}")
+
+    fd, temp_path = tempfile.mkstemp(prefix=".pdf_work_", suffix=".pdf")
+    os.close(fd)
+    shutil.copy2(source_path, temp_path)
 
     try:
-        handle = fitz.open(pdf_path)
+        handle = fitz.open(temp_path)
     except Exception as exc:  # pragma: no cover - defensive for PyMuPDF errors
-        raise PdfLoadError(f"Failed to open PDF: {pdf_path}") from exc
+        raise PdfLoadError(f"Failed to open PDF: {source_path}") from exc
 
-    return PdfDocument(path=pdf_path, handle=handle)
+    return PdfDocument(path=source_path, working_path=Path(temp_path), handle=handle)

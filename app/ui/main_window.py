@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import shutil
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction, QActionGroup, QKeySequence, QPixmap
@@ -141,7 +142,7 @@ class MainWindow(QMainWindow):
         self._session = DocumentSession()
         self._field_counter = 1
         try:
-            for field in import_pdf_fields(file_path):
+            for field in import_pdf_fields(self._document.working_path):
                 self._session.fields_by_page.setdefault(field.page_index, []).append(field)
         except PdfImportError as exc:
             QMessageBox.warning(self, "Field Import Warning", str(exc))
@@ -149,7 +150,7 @@ class MainWindow(QMainWindow):
         self._current_page_index = 0
         self._populate_page_list()
         self._render_current_page()
-        self.statusBar().showMessage(f"Loaded: {file_path}")
+        self.statusBar().showMessage(f"Loaded: {file_path} (editing temp working copy)")
 
     def save_pdf(self) -> None:
         if self._document is None:
@@ -165,15 +166,20 @@ class MainWindow(QMainWindow):
         if not output_path:
             return
 
+        self._document.close_handle()
         try:
             write_pdf_with_fields(
-                source_path=self._document.path,
-                output_path=output_path,
+                source_path=self._document.working_path,
+                output_path=self._document.working_path,
                 fields=self._session.all_fields(),
             )
-        except PdfWriteError as exc:
+            shutil.copy2(self._document.working_path, output_path)
+        except (PdfWriteError, OSError) as exc:
             QMessageBox.critical(self, "Save Failed", str(exc))
+            self._document.reopen_handle()
             return
+        self._document.reopen_handle()
+        self._render_current_page()
 
         self.statusBar().showMessage(f"Saved: {output_path}")
 

@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from collections import defaultdict
 from io import BytesIO
+import os
 from pathlib import Path
+import tempfile
 
 from pypdf import PdfReader, PdfWriter
 from pypdf.generic import ArrayObject, BooleanObject, DictionaryObject, NameObject, NumberObject
@@ -42,8 +44,7 @@ def write_pdf_with_fields(
 
             _hide_widget_borders(writer)
 
-        with output.open("wb") as handle:
-            writer.write(handle)
+        _write_pdf_atomically(writer, output)
     except Exception as exc:
         raise PdfWriteError(f"Failed to write output PDF: {output}") from exc
 
@@ -185,3 +186,21 @@ def _clear_widget_background(widget_annot: DictionaryObject) -> None:
     mk_dict = mk.get_object()
     if "/BG" in mk_dict:
         del mk_dict["/BG"]
+
+
+def _write_pdf_atomically(writer: PdfWriter, output: Path) -> None:
+    output.parent.mkdir(parents=True, exist_ok=True)
+    fd, temp_path = tempfile.mkstemp(
+        prefix=f".{output.stem}_",
+        suffix=".pdf",
+        dir=str(output.parent),
+    )
+    os.close(fd)
+
+    try:
+        with open(temp_path, "wb") as handle:
+            writer.write(handle)
+        os.replace(temp_path, output)
+    finally:
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
